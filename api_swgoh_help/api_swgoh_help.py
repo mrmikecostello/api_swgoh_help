@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Sep  4 20:49:07 2018
 
-@author: platzman
-
-@contributor: martrepodi
+@author: martrepodi
 """
 
 import requests
@@ -107,7 +104,9 @@ class api_swgoh_help():
         except Exception as e:
             return str(e)
 
-    def fetchEvents(self, payload={"language": "eng_us", "enums": True}):
+    def fetchEvents(self, payload):
+        if not payload:
+            payload = { "language": "eng_us", "enums": True }
         try:
             return self.fetchAPI(self.endpoints['events'], payload)
         except Exception as e:
