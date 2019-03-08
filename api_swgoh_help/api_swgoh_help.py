@@ -6,6 +6,7 @@ Created on Tue Sep  4 20:49:07 2018
 
 import requests
 from json import loads, dumps
+import time
 
 class api_swgoh_help():
     def __init__(self, settings):
@@ -22,7 +23,7 @@ class api_swgoh_help():
         self.signin = '/auth/signin'
         self.endpoints = {'guilds': '/swgoh/guilds',
                           'players': '/swgoh/players',
-                          'rosters': '/swgoh/rosters',
+                          'roster': '/swgoh/roster',
                           'data': '/swgoh/data',
                           'units': '/swgoh/units',
                           'zetas': '/swgoh/zetas',
@@ -30,20 +31,10 @@ class api_swgoh_help():
                           'events': '/swgoh/events',
                           'battles': '/swgoh/battles'}
 
-        if settings.statsUrl:
-            self.statsUrl = settings.statsUrl
-        else:
-            self.statsUrl = 'https://crinolo-swgoh.glitch.me/baseStats/api/'
-
         if settings.charStatsApi:
             self.charStatsApi = settings.charStatsApi
         else:
-            self.charStatsApi = 'https://crinolo-swgoh.glitch.me/statCalc/api/characters'
-
-        if settings.shipStatsApi:
-            self.shipStatsApi = settings.shipStatsApi
-        else:
-            self.shipStatsApi = 'https://crinolo-swgoh.glitch.me/statCalc/api/ships'
+            self.charStatsApi = 'https://crinolo-swgoh.glitch.me/testCalc/api'
 
         self.verbose = settings.verbose if settings.verbose else False
         self.debug = settings.debug if settings.debug else False
@@ -55,28 +46,31 @@ class api_swgoh_help():
                           'units':'/swgoh/units',
                           'battles':'/swgoh/battles'}
         
-    def get_token(self):
-        sign_url = self.urlBase+self.signin
+    def _getAccessToken(self):
+        if 'expires' in self.token.keys():
+            token_expire_time = self.token['expires']
+            if token_expire_time > time.time():
+                return(self.token)
+        signin_url = self.urlBase+self.signin
         payload = self.user
-        head = {"Content-type": "application/x-www-form-urlencoded",
-                'Content-Length': str(len(payload))}
-        r = requests.request('POST',sign_url, headers=head, data=payload, timeout = 10)
+        head = {"Content-type": "application/x-www-form-urlencoded"}
+        r = requests.request('POST',signin_url, headers=head, data=payload, timeout = 10)
         if r.status_code != 200:
-            error = 'Cannot login with these credentials'
+            error = 'Login failed!'
             return  {"status_code" : r.status_code,
                      "message": error}
-        _tok = loads(r.content.decode('utf-8'))['access_token']
-        self.token = { 'Authorization':"Bearer "+_tok} 
+        response = loads(r.content.decode('utf-8'))
+        self.token = { 'Authorization': "Bearer " + response['access_token'],
+                       'expires': time.time() + response['expires_in'] - 30}
         return(self.token)
 
     def fetchAPI(self, url, payload):
-        self.get_token()
+        self._getAccessToken()
         head = {'Content-Type': 'application/json', 'Authorization': self.token['Authorization']}
         data_url = self.urlBase + url
         try:
             r = requests.request('POST', data_url, headers=head, data=dumps(payload))
             if r.status_code != 200:
-                print("Error posting data...")
                 error = 'Cannot fetch data - error code'
                 data = {"status_code": r.status_code,
                         "message": error}
@@ -99,6 +93,8 @@ class api_swgoh_help():
             return str(e)
 
     def fetchBattles(self, payload):
+        if not payload:
+            payload = { "language": "eng_us", "enums": True }
         try:
             return self.fetchAPI(self.endpoints['battles'], payload)
         except Exception as e:
@@ -113,36 +109,93 @@ class api_swgoh_help():
             return str(e)
 
     def fetchData(self, payload):
+        if type(payload) != dict:
+            return({'message': "Payload ERROR: dict expected."})
+        if 'collection' not in payload.keys():
+            return({'message': "Payload ERROR: No collection element in provided dictionary."})
         try:
             return self.fetchAPI(self.endpoints['data'], payload)
         except Exception as e:
             return str(e)
 
     def fetchPlayers(self, payload):
+        if type(payload) == list:
+            p = {}
+            p['allycodes'] = payload
+            p['language'] = "eng_us"
+            p['enums'] = True
+            payload = p
+        elif type(payload) == int:
+            p = {}
+            p['allycodes'] = [payload]
+            p['language'] = "eng_us"
+            p['enums'] = True
+            payload = p
+        elif type(payload) != dict:
+            return({'message': "Payload ERROR: integer, list of integers, or dict expected.", 'status_code': "000"})
         try:
             return self.fetchAPI(self.endpoints['players'], payload)
         except Exception as e:
             return str(e)
 
-    def fetchGuild(self, payload):
+    def fetchGuilds(self, payload):
+        if type(payload) == list:
+            p = {}
+            p['allycodes'] = payload
+            p['language'] = "eng_us"
+            p['enums'] = True
+            payload = p
+        elif type(payload) == int:
+            p = {}
+            p['allycodes'] = [payload]
+            p['language'] = "eng_us"
+            p['enums'] = True
+            payload = p
+        elif type(payload) != dict:
+            return({'message': "Payload ERROR: integer, list of integers, or dict expected.", 'status_code': "000"})
         try:
             return self.fetchAPI(self.endpoints['guilds'], payload)
         except Exception as e:
             return str(e)
 
     def fetchUnits(self, payload):
+        if type(payload) == list:
+            p = {}
+            p['allycodes'] = payload
+            p['enums'] = True
+            payload = p
+        elif type(payload) == int:
+            p = {}
+            p['allycodes'] = [payload]
+            p['language'] = "eng_us"
+            p['enums'] = True
+            payload = p
+        elif type(payload) != dict:
+            return({'message': "Payload ERROR: integer, list of integers, or dict expected.", 'status_code': "000"})
         try:
             return self.fetchAPI(self.endpoints['units'], payload)
         except Exception as e:
             return str(e)
 
     def fetchRoster(self, payload):
+        if type(payload) == list:
+            p = {}
+            p['allycodes'] = payload
+            p['enums'] = True
+            payload = p
+        elif type(payload) == int:
+            p = {}
+            p['allycodes'] = [payload]
+            p['enums'] = True
+            payload = p
+        elif type(payload) != dict:
+            return({'message': "Payload ERROR: integer, list of integers, or dict expected.", 'status_code': "000"})
         try:
             return self.fetchAPI(self.endpoints['roster'], payload)
         except Exception as e:
             return str(e)
 
-    def rosterStats(self, unit, flags, type):
+    def statCalcRoster(self, unit, flags, type):
         try:
             if not unit:
                 raise ValueError('No units passed to stats calc!')
@@ -173,11 +226,8 @@ class api_swgoh_help():
         except Exception as e:
             return str(e)
 
-    def unitStats(self, unit, flags, type):
+    def statCalcUnits(self, unit, flags, type):
         try:
-            if not unit:
-                raise ValueError('No units passed to stats calc!')
-
             apiUrl = self.shipStatsApi if type and (type == 'SHIP' or type == 2) else self.charStatsApi
             apiUrl += '?flags=' + flags if flags else ''
 
@@ -194,27 +244,50 @@ class api_swgoh_help():
         except Exception as e:
             return str(e)
 
-    def calcStats(self, allycode, *args, **kwargs):
-        print("Entering calcStats...")
-        if not allycode:
-            raise ValueError('No allycode passed to stats calc!')
-
+    def statCalc(self, **kwargs):
+        allycode = kwargs.get('allycode', '')
         baseId = kwargs.get('baseId', '')
         baseId = baseId.upper()
-        print("BaseId: " + baseId)
-        type = kwargs.get('type', '')
-        print("Type: " + type)
         flags = kwargs.get('flags', [])
-        flags = ','.join(str(x) for x in flags)
-        print("Flags: " + flags)
+        flags_str = "flags="+ ','.join(str(x) for x in flags) if flags else ''
+        param_str = ''
 
-        apiUrl = self.shipStatsApi if (type and (type == 'SHIP' or type == 2)) else self.charStatsApi
-        apiUrl += '/player/' + str(allycode)
-        apiUrl += '/' + baseId if baseId else ''
-        apiUrl += '?flags=' + flags if flags else ''
+        if not allycode:
+            params = kwargs.get('params', {})
+            param_list = []
+            for param in params.keys():
+                param_list.append(param + "=" + str(params[param]))
+            param_str = ','.join(str(x) for x in param_list)
 
-        head = {'Content-Type': 'application/json'}
+        apiUrl = self.charStatsApi
+        apiUrl += '/player/' + str(allycode) if allycode else ''
+        apiUrl += '/characters/' + baseId if baseId else ''
+        if param_str or flags_str:
+            apiUrl += '?'
+            if param_str:
+                apiUrl += param_str
+                if flags_str:
+                    apiUrl += '&' + flags_str
+            elif flags_str:
+                apiUrl += flags_str
+
         print("URL: " + apiUrl)
+
+#        head = {'Content-Type': 'application/json'}
+#        r = requests.request('GET', apiUrl, headers=head)
+#        if r.status_code != 200:
+#            error = 'Cannot fetch data - error code'
+#            data = {"status_code": r.status_code,
+#                    "message": error}
+#        else:
+#            data = loads(r.content.decode('utf-8'))
+#        return (data)
+
+    def fetchStats(self, allycode):
+        if not allycode:
+            raise ValueError('No allycode provided')
+        apiUrl = self.charStatsApi + '/player/' + str(allycode) + '/characters?flags=withModCalc,gameStyle'
+        head = {'Content-Type': 'application/json'}
         r = requests.request('GET', apiUrl, headers=head)
         if r.status_code != 200:
             error = 'Cannot fetch data - error code'
@@ -222,32 +295,15 @@ class api_swgoh_help():
                     "message": error}
         else:
             data = loads(r.content.decode('utf-8'))
-
-        return (data)
-
-    def fetchStats(self, allycode, *args, **kwargs):
-        apiUrl = self.charStatsApi + '/player/' + str(allycode) + '?flags=withModCalc,gameStyle'
-        head = {'Content-Type': 'application/json'}
-        print("URL: " + apiUrl)
-        r = requests.request('GET', apiUrl, headers=head)
-        if r.status_code != 200:
-            error = 'Cannot fetch data - error code'
-            data = {"status_code": r.status_code,
-                    "message": error}
-        else:
-            data = loads(r.content.decode('utf-8'))
-
         return (data)
 
 class settings():
-    def __init__(self, _username, _password, *args, **kwargs):
+    def __init__(self, _username, _password, **kwargs):
         self.username = _username
         self.password = _password
         self.client_id = kwargs.get('client_id', '123')
         self.client_secret = kwargs.get('client_secret', 'abc')
-        self.statsUrl = kwargs.get('statsUrl', '')
         self.charStatsApi = kwargs.get('charStatsApi', '')
-        self.shipStatsApi = kwargs.get('shipStatsApi', '')
         self.verbose = kwargs.get('verbose', False)
         self.debug = kwargs.get('debug', False)
         self.dump = kwargs.get('dump', False)
