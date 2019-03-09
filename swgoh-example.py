@@ -10,14 +10,13 @@ skills = {}
 abilities = {}
 gear = {}
 
-creds = settings('MarTrepodi', 'yGv-y74-eUu-cNn')
+# Change the settings below
+creds = settings('JohnDoe', 'password')
 client = api_swgoh_help(creds)
 
-allycodes = [314927874]
+allycodes = [123456789]
 
-client.get_token()
-
-# Build local units list
+# Build local list of obtainable characters
 payload = {}
 payload['collection'] = "unitsList"
 payload['language'] = "eng_us"
@@ -85,16 +84,12 @@ payload['enums'] = True
 # Remove the project payload element to retrieve the player's entire roster
 payload['project'] = { "name": 1 }
 
-#print("Players\n-------")
-#players = client.fetchPlayers(payload)
-#print(json.dumps(players, indent=2))
+# Fetch player information (one or more allycodes in a list)
+players = client.fetchPlayers(allycodes)
 
-# mods = client.fetchPlayers(allycode)
-# zetas = client.fetchZetas()
-# stats = client.calcStats(allycode)
+# Fetch a list of guild member allycodes
+allycodes = [123456789, 987654321]
+guild_allycodes = client.fetchGuilds(allycodes)
 
-# print("\nMods\n-------")
-# print(json.dumps(mods, indent=2))
-# print("\nZetas\n-------")
-# print(json.dumps(zetas, indent=2))
-
+# Fetch a list of ranked zeta recommendations
+zetas = client.fetchZetas()
