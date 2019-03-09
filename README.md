@@ -44,18 +44,7 @@ Python wrapper for the API at https://api.swgoh.help/
 
 ## Usage
 
-          from api_swgoh_help import api_swgoh_help, settings
-
-          creds = settings('your_username','your_password')
-          client = api_swgoh_help(creds)
-
-          allycode = 123456789
-
-	player = client.fetchPlayers(allycode)
-
-
-## Example
-
+```
 	from api_swgoh_help import api_swgoh_help, settings
 	creds = settings('your_username','your_password')
 	client = api_swgoh_help(creds)
@@ -66,4 +55,4 @@ Python wrapper for the API at https://api.swgoh.help/
 
 	for player in players:
 	    print("Name: {0} ({1}) level: {2} - Guild: {3}".format(player['name'], player['allyCode'], player['level'], player['guildName']))
-
+```
