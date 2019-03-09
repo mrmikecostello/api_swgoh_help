@@ -1,7 +1,9 @@
 """
-Created on Tue Sep  4 20:49:07 2018
+Created on Tue Sep  4  2018
 
 @author: martrepodi
+
+Built upon code borrowed from platzman and shittybill
 """
 
 import requests
@@ -194,108 +196,6 @@ class api_swgoh_help():
             return self.fetchAPI(self.endpoints['roster'], payload)
         except Exception as e:
             return str(e)
-
-    def statCalcRoster(self, unit, flags, type):
-        try:
-            if not unit:
-                raise ValueError('No units passed to stats calc!')
-            if type(unit) is not list:
-                unit = [unit]
-            payload = []
-            for u in unit:
-                payload.push({'defId': u.defId,
-                              'rarity': u.rarity,
-                              'level': u.level,
-                              'gear': u.gear,
-                              'equipped': u.equipped,
-                              'mods': u.mods
-                              })
-            apiUrl = self.shipStatsApi if type and (type == 'SHIP' or type == 2) else self.charStatsApi
-            apiUrl += '?flags=' + flags if flags else ''
-
-            data = dumps(payload)
-            head = {'Content-Type': 'application/json'}
-            r = requests.request('POST', apiUrl, headers=head, data=data)
-            if r.status_code != 200:
-                error = 'Cannot fetch data - error code'
-                data = {"status_code": r.status_code,
-                        "message": error}
-            else:
-                data = loads(r.content.decode('utf-8'))
-            return data
-        except Exception as e:
-            return str(e)
-
-    def statCalcUnits(self, unit, flags, type):
-        try:
-            apiUrl = self.shipStatsApi if type and (type == 'SHIP' or type == 2) else self.charStatsApi
-            apiUrl += '?flags=' + flags if flags else ''
-
-            data = dumps(unit)
-            head = {'Method': 'POST', 'Content-Type': 'application/json'}
-            r = requests.request('POST', apiUrl, headers=head, data=data)
-            if r.status_code != 200:
-                error = 'Cannot fetch data - error code'
-                data = {"status_code": r.status_code,
-                        "message": error}
-            else:
-                data = loads(r.content.decode('utf-8'))
-            return data
-        except Exception as e:
-            return str(e)
-
-    def statCalc(self, **kwargs):
-        allycode = kwargs.get('allycode', '')
-        baseId = kwargs.get('baseId', '')
-        baseId = baseId.upper()
-        flags = kwargs.get('flags', [])
-        flags_str = "flags="+ ','.join(str(x) for x in flags) if flags else ''
-        param_str = ''
-
-        if not allycode:
-            params = kwargs.get('params', {})
-            param_list = []
-            for param in params.keys():
-                param_list.append(param + "=" + str(params[param]))
-            param_str = ','.join(str(x) for x in param_list)
-
-        apiUrl = self.charStatsApi
-        apiUrl += '/player/' + str(allycode) if allycode else ''
-        apiUrl += '/characters/' + baseId if baseId else ''
-        if param_str or flags_str:
-            apiUrl += '?'
-            if param_str:
-                apiUrl += param_str
-                if flags_str:
-                    apiUrl += '&' + flags_str
-            elif flags_str:
-                apiUrl += flags_str
-
-        print("URL: " + apiUrl)
-
-#        head = {'Content-Type': 'application/json'}
-#        r = requests.request('GET', apiUrl, headers=head)
-#        if r.status_code != 200:
-#            error = 'Cannot fetch data - error code'
-#            data = {"status_code": r.status_code,
-#                    "message": error}
-#        else:
-#            data = loads(r.content.decode('utf-8'))
-#        return (data)
-
-    def fetchStats(self, allycode):
-        if not allycode:
-            raise ValueError('No allycode provided')
-        apiUrl = self.charStatsApi + '/player/' + str(allycode) + '/characters?flags=withModCalc,gameStyle'
-        head = {'Content-Type': 'application/json'}
-        r = requests.request('GET', apiUrl, headers=head)
-        if r.status_code != 200:
-            error = 'Cannot fetch data - error code'
-            data = {"status_code": r.status_code,
-                    "message": error}
-        else:
-            data = loads(r.content.decode('utf-8'))
-        return (data)
 
 class settings():
     def __init__(self, _username, _password, **kwargs):
