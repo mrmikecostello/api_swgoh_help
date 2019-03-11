@@ -15,7 +15,7 @@ class instance is then passed to the api_swgoh_help client instance.
 The primary method provided by the api_swgoh_help class is fetchAPI(). This method
 takes two parameters. The first parameter is the endpoint URL to call, for example 
 '/swgoh/data'. The second parameter is a standard python dictionary containing the
-paramters needed for the desired endpoint. The dictionary is converted to a JSON 
+parameters needed for the desired endpoint. The dictionary is converted to a JSON 
 string to send in the body of the HTTP POST sent to the API. The fetchAPI() method
 automatically manages the Authorization token issued by the API upon successful
 login during the initial request.
