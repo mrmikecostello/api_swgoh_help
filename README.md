@@ -1,6 +1,9 @@
 # api_swgoh_help
 Python wrapper for the API at https://api.swgoh.help/
 
+This implementation is based upon the work done by platzman (python module) and 
+shittybill (node.js interface)
+
 ## Description
 
 This wrapper attempts to provide an easy to use interface for the Star Wars Galaxy 
