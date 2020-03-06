@@ -11,7 +11,7 @@ abilities = {}
 gear = {}
 
 # Change the settings below
-creds = settings('JohnDoe', 'password')
+creds = settings('CrazyOldBen', 'JBJBpsvXpjp9Dhk')
 client = api_swgoh_help(creds)
 
 allycodes = [123456789]
